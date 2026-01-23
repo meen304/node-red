@@ -1,0 +1,33 @@
+:: หยุด ถ้ามันหยุดได้ และฆ่า PID เก่า
+sc stop NodeRed
+nssm stop NodeRed
+taskkill /F /PID 4380 2>nul
+taskkill /F /PID 6164 2>nul
+
+:: ลบ service เดิม
+nssm remove NodeRed confirm
+sc delete NodeRed
+
+:: สร้างโฟลเดอร์และให้ SYSTEM สิทธิ์
+mkdir C:\node-red 2>nul
+mkdir C:\logs 2>nul
+icacls "C:\node-red" /grant "NT AUTHORITY\SYSTEM:(OI)(CI)F" /T
+icacls "C:\logs" /grant "NT AUTHORITY\SYSTEM:(OI)(CI)F" /T
+
+:: ติดตั้งใหม่ให้ nssm เรียก node.exe -> red.js โดยตรง
+nssm install NodeRed "C:\Program Files\nodejs\node.exe" "\"C:\Users\Server-Tower5\AppData\Roaming\npm\node_modules\node-red\red.js\" --userDir \"C:\node-red\""
+
+:: ตั้ง working dir และ log
+nssm set NodeRed AppDirectory "C:\node-red"
+nssm set NodeRed AppStdout "C:\logs\nodered-out.log"
+nssm set NodeRed AppStderr "C:\logs\nodered-err.log"
+
+:: ตั้ง auto-start แล้วสตาร์ท
+sc config NodeRed start= auto
+nssm start NodeRed
+
+:: ตรวจสอบผล
+sc queryex NodeRed
+type C:\logs\nodered-out.log
+type C:\logs\nodered-err.log
+netstat -ano | findstr :1880
