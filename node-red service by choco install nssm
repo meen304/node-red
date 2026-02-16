@@ -31,3 +31,11 @@ sc queryex NodeRed
 type C:\logs\nodered-out.log
 type C:\logs\nodered-err.log
 netstat -ano | findstr :1880
+
+
+
+:: set services for only user and computerName not localsystem (in cmd admin exsample)
+--------------------------DESKTOP = COMPUTERNAME , USER = admin --------------------
+echo %COMPUTERNAME%
+nssm set NodeRed ObjectName "DESKTOP-ALQ5ELP\admin" "admin@123"
+nssm restart NodeRed 
