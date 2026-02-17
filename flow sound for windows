@@ -1,0 +1,32 @@
+flow sound
+trigger using inject
+
+--------------------------- function ------------------------
+// รับ msg.payload = 'กรุณาวางมื.wav'
+const fname = (msg.payload || 'thank.wav').toString().trim();
+const user = 'ameen'; // ถ้าชื่อผู้ใช้ไม่ใช่ ameen ให้แก้ตรงนี้
+const fullPath = `C:\\Users\\${user}\\Downloads\\${fname}`;
+const escaped = fullPath.replace(/'/g, "''");
+
+// ใช้ SoundPlayer เล่น WAV ได้เลย
+msg.payload = `(New-Object Media.SoundPlayer '${escaped}').PlaySync()`;
+
+// debug
+node.warn('PowerShell payload: ' + msg.payload);
+return msg;
+----------------------------------------------------------
+
+---------------------- exec --------------------------------
+// รับ msg.payload = 'กรุณาวางมื.wav'
+const fname = (msg.payload || 'thank.wav').toString().trim();
+const user = 'ameen'; // ถ้าชื่อผู้ใช้ไม่ใช่ ameen ให้แก้ตรงนี้
+const fullPath = `C:\\Users\\${user}\\Downloads\\${fname}`;
+const escaped = fullPath.replace(/'/g, "''");
+
+// ใช้ SoundPlayer เล่น WAV ได้เลย
+msg.payload = `(New-Object Media.SoundPlayer '${escaped}').PlaySync()`;
+
+// debug
+node.warn('PowerShell payload: ' + msg.payload);
+return msg;
+------------------------------------------------------------
