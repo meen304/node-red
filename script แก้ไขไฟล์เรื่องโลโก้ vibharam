@@ -1,0 +1,29 @@
+--------------------------------------Park-out V1.6-----------------------------------
+<template>
+  <img :src="logoSrc" alt="logo" style="max-width:200px;">
+</template>
+
+<script>
+export default {
+  data(){
+    return {
+      lang: 'th',
+      uiState: 'idle',
+      // ใช้พาธแบบ root ที่ Node-RED จะเสิร์ฟออกมา
+      logoSrc: '/vibharam_logo.jpg',
+      customerLogoSrc: '',
+      isPrompting: false,
+      animUrl: ''
+    }
+  }
+}
+</script>
+---------------------------------------------------------------------------------------
+
+setting.js
+httpStatic: "C:/Users/user/.node-red/public",
+เพิ่มใต้ httpStatic เดิม
+
+
+path file
+"C:\Users\user\.node-red\public\vibharam_logo.jpg"
