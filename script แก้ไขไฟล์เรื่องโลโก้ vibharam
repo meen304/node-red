@@ -1,3 +1,12 @@
+<template>
+                      <img
+                      v-else
+                      :src="src"
+                      :alt="'frame-'+(i+1)"
+                      loading="lazy"
+                      decoding="async"
+                      @error="e => { e.target.onerror=null; e.target.src = (customerLogoSrc || logoSrc); }" />
+</template>
 --------------------------------------Park-out V1.6-----------------------------------
 <template>
   <img :src="logoSrc" alt="logo" style="max-width:200px;">
