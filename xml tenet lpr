@@ -1,0 +1,65 @@
+// Node-RED Function node: parse payload, convert epoch -> Bangkok datetime,
+// save flow vars licensePlate & dateTime, return msg.payload with both.
+
+// --- helper: zero-pad
+function z(n){ return (n<10? '0':'') + n; }
+
+// input payload (ตามตัวอย่าง user)
+const p = msg.payload || {};
+
+
+
+let licensePlate = (p.plate_num !== undefined && p.plate_num !== null) ? String(p.plate_num).trim() : '';
+
+// --- parse start_time (รองรับ string/int ทั้ง seconds หรือ milliseconds)
+let raw = p.start_time || p.timestamp || p.time || '';
+raw = String(raw).trim();
+
+let ts = null;
+if(raw === '') {
+  // ถ้าไม่มี timestamp ให้ใช้เวลาปัจจุบัน (UTC)
+  ts = Date.now();
+} else {
+  // ตรวจว่าค่าเป็นตัวเลขหรือไม่
+  const num = Number(raw);
+  if (isNaN(num)) {
+    // ถ้าไม่ใช่ตัวเลข ให้พยายาม parse จากรูปแบบอื่นๆ หรือใช้ now
+    ts = Date.now();
+  } else {
+    // ถ้า length >= 13 ให้ถือเป็น milliseconds, ถ้า <= 10 ถือเป็น seconds
+    if (raw.length >= 13 || num > 1e12) {
+      ts = num; // already ms
+    } else {
+      ts = num * 1000; // convert sec -> ms
+    }
+  }
+}
+
+// --- convert timestamp -> Bangkok local datetime string "YYYY-MM-DD HH:MM:SS"
+const BKK_OFFSET_MS = 7 * 3600 * 1000; // UTC+7
+const dt = new Date(ts + BKK_OFFSET_MS);
+
+// build formatted string
+const YYYY = dt.getUTCFullYear();
+const MM = z(dt.getUTCMonth() + 1);
+const DD = z(dt.getUTCDate());
+const hh = z(dt.getUTCHours());
+const mm = z(dt.getUTCMinutes());
+const ss = z(dt.getUTCSeconds());
+
+const dateTime = `${YYYY}-${MM}-${DD} ${hh}:${mm}:${ss}`;
+
+// --- set flow context as requested
+flow.set("licensePlate", licensePlate);
+flow.set("dateTime", dateTime);
+
+// --- put useful info back to msg.payload for downstream nodes / debug
+msg.payload = Object.assign({}, p, {
+  licensePlate: licensePlate,
+  dateTime: dateTime
+});
+
+// optional: if you want to keep original start_time too
+msg.payload.original_start_time = p.start_time || null;
+
+return msg;
