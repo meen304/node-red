@@ -1,0 +1,19 @@
+// รับ msg.payload = 'กรุณาวางมื.wav'
+const fname = ('get_ticket.wav').toString().trim();
+const fullPath = `C:\\node-red\\sound\\${fname}`;
+const escaped = fullPath.replace(/'/g, "''");
+
+// ใช้ SoundPlayer เล่น WAV ได้เลย
+msg.payload = `(New-Object Media.SoundPlayer '${escaped}').PlaySync()`;
+
+// debug
+node.warn('PowerShell payload: ' + msg.payload);
+return msg;
+
+
+
+
+
+exec
+
+powershell -NoLogo -NoProfile -Command
