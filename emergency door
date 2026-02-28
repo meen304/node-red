@@ -1,0 +1,207 @@
+// function node: filter only real emergency presses
+
+// รับ payload รูปแบบที่เป็นไปได้
+let body = msg.payload;
+
+// บางครั้ง uibuilder/ฝั่งหน้าเว็บอาจห่อ payload ซ้อน
+if (body && body.payload) body = body.payload;
+
+// ถ้า payload เป็น string ที่เก็บ JSON ให้ parse (กรณีบาง config)
+if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch (e) { /* leave as string */ }
+}
+
+// ตรวจเงื่อนไขที่ระบุว่าเป็น "ปุ่มฉุกเฉิน" เท่านั้น
+const isTopic = (msg.topic && msg.topic === 'api.entrance.press');
+const isBodyEmergency = (body && (body.action === 'emergency' || body === 'emergency'));
+
+if (isTopic || isBodyEmergency) {
+    // สร้าง payload ที่จะส่งไปยัง serial
+    // ปรับเป็น "(1)" หรือ "(1)\r\n" หรือ Buffer ตามที่อุปกรณ์ต้องการ
+    msg.payload = "(1)";            // ลองก่อนเป็น string
+    // msg.payload = "(1)\r\n";    // ถ้าต้องการ CRLF
+    // msg.payload = Buffer.from("(1)"); // ถ้าต้องการไบต์
+
+    return msg; // ส่งต่อ
+}
+
+// อื่น ๆ ให้หยุด (ไม่ส่งต่อ)
+return null;
+
+//------------------------------------------------------- node-red ------------------------------------ 
+
+// -------------------------------------------- deshboard -------------------------------
+
+
+
+
+methods:{
+    setLang(l){ this.lang = (l==='en') ? 'en' : 'th'; },
+    // ===== actions
+    press(){
+      try { this.send({ topic:'api.entrance.press', payload:{ at: Date.now() } }); } catch(e){}
+    },
+
+    emergencyPress(){
+      if(!confirm('ยืนยันสั่งฉุกเฉิน?')) return;
+    
+        const msg = { topic: 'api.entrance.press', payload: { action: 'emergency', ts: Date.now() } };
+    
+      try {
+        if (typeof this.send === 'function') {
+          console.log('Sending via this.send', msg);
+          this.send(msg);
+        } else if (window?.uibuilder && typeof window.uibuilder.send === 'function') {
+          console.log('Sending via window.uibuilder.send', msg);
+          window.uibuilder.send(msg);
+        } else {
+          console.warn('No send found. this.send=', typeof this.send, 'window.uibuilder=', window?.uibuilder);
+          alert('ไม่สามารถส่งคำสั่ง: ไม่พบช่องทางส่งไป Node-RED (ดู console)');
+          return;
+        }
+        this.isPrompting = true;
+        setTimeout(()=> this.isPrompting = false, 1500);
+      } catch (e) {
+        console.error('Emergency send failed', e);
+        alert('ส่งคำสั่งฉุกเฉินล้มเหลว — ดู console');
+      }
+    },
+
+//******************************* button**********************////
+<button
+  class="emergency-btn"
+  :class="{ pressed: emergencyActive }"
+  @click="emergencyPress"
+  :aria-pressed="emergencyActive"
+>
+  ฉุกเฉิน
+</button>
+// *********************************************************** 
+
+// -****************************************** methods -----------
+    emergencyPress(){
+  if (this._emergencyTimer) { clearTimeout(this._emergencyTimer); this._emergencyTimer = null; }
+  this.emergencyActive = true;
+
+  // ส่งข้อความไป Node-RED (เหมือนเดิม)
+  const msg = { topic: 'api.entrance.press', payload: { action: 'emergency', ts: Date.now() } };
+  try {
+    if (typeof this.send === 'function') this.send(msg);
+    else if (window?.uibuilder && typeof window.uibuilder.send === 'function') window.uibuilder.send(msg);
+  } catch(e){ console.error(e); }
+
+  // ปิดเอฟเฟกต์อัตโนมัติหลัง 500ms
+  this._emergencyTimer = setTimeout(()=> { this.emergencyActive = false; this._emergencyTimer = null; }, 500);
+}
+
+// ******************************** methods --------------------
+// *********************************  css ----------------------
+/* วางไว้ใกล้ๆ กับ .emergency-btn ปัจจุบัน */
+.emergency-btn{
+  margin-left:10px;
+  padding:8px 12px;
+  border-radius:10px;
+  background:#e02424;
+  color:#fff;
+  border:0;
+  font-weight:800;
+  box-shadow:0 6px 18px rgba(224,36,36,.24);
+  transition: transform .08s ease, box-shadow .12s ease, background .12s ease, filter .12s ease;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* hover/keyboard focus */
+.emergency-btn:hover{ filter:brightness(1.04); }
+.emergency-btn:focus{
+  outline: none;
+  box-shadow: 0 8px 24px rgba(224,36,36,.28), 0 0 0 6px rgba(224,36,36,.10);
+}
+
+/* กดแบบชั่วคราว (คลิกค้าง) */
+.emergency-btn:active{
+  transform: translateY(1px) scale(.995);
+  box-shadow: 0 4px 12px rgba(224,36,36,.22);
+}
+
+/* ถ้าจะให้สถานะ 'กดแล้ว' ค้างไว้ด้วย class */
+.emergency-btn.pressed{
+  transform: translateY(0) scale(1);
+  background: linear-gradient(180deg,#ff5b5b,#e02424);
+  box-shadow: 0 18px 40px rgba(224,36,36,.28), 0 0 22px rgba(255,91,91,.12) inset;
+}
+// *********************************** css -------------------------------------
+
+
+
+
+// *********************************** lasted ----------------------------
+
+//----------------------- method ------------ //
+    emergencyPress(){
+    // visual feedback — set ก่อนเลย
+      if (this._emergencyTimer) {
+        clearTimeout(this._emergencyTimer);
+        this._emergencyTimer = null;
+      }
+    // ให้เกิดการเปลี่ยนแปลง DOM จริงๆ ก่อนส่ง (ป้องกันบางกรณีที่ UI ถูกรีเรนเดอร์ทันที)
+      this.emergencyActive = true;
+      this.$nextTick?.(() => {
+      // ส่งข้อความไป Node-RED
+        const msg = { topic: 'api.entrance.press', payload: { action: 'emergency', ts: Date.now() } };
+        try {
+          if (typeof this.send === 'function') this.send(msg);
+          else if (window?.uibuilder && typeof window.uibuilder.send === 'function') window.uibuilder.send(msg);
+          else console.warn('No send() found for Node-RED');
+        } catch(e){
+          console.error('Emergency send failed', e);
+        }
+
+      // reset visual after 400-700ms (ปรับได้)
+        this._emergencyTimer = setTimeout(() => {
+          this.emergencyActive = false;
+          this._emergencyTimer = null;
+        }, 550);
+      });
+    },
+
+
+
+
+
+//*************************** button  class = 'lang' *********************************
+<button
+                class="emergency-btn"
+                :class="{ 'emergency-pressed': emergencyActive }"
+                @click="emergencyPress"
+                aria-pressed="emergencyActive"
+              >ฉุกเฉิน</button>
+              
+// ********************************** data return 
+ <script>
+export default {
+  data(){
+    return {   
+      emergencyActive: false,
+      _emergencyTimer: null, // เก็บ timeout เผื่อกดซ้ำ 
+//
+//-------------------css
+button.emergency-btn{
+  margin-left:10px;
+  padding:8px 12px;
+  border-radius:10px;
+  background:#e02424;
+  color:#fff;
+  border:0;
+  font-weight:800;
+  box-shadow:0 6px 18px rgba(224,36,36,.14);
+  transition: transform .14s ease, box-shadow .14s ease, filter .14s ease, background .12s ease;
+}
+button.emergency-btn.emergency-pressed {
+  transform: translateY(-2px) scale(1.03);
+  background: linear-gradient(180deg,#ff6b6b,#e02424);
+  box-shadow: 0 18px 40px rgba(224,36,36,.28), 0 0 22px rgba(255,91,91,.12) inset;
+  filter: saturate(1.08);
+}
+
+    
