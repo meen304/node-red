@@ -1,0 +1,3 @@
+//******************** setting.js ************** nodered********
+
+httpStatic: "C:/Users/ameen/.node-red/public",
