@@ -1,0 +1,4 @@
+functionGlobalContext: {
+        // os:require('os'),
+  	    sharp: require('sharp'),
+	      iconv:require('iconv-lite')
