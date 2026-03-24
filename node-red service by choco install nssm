@@ -8,6 +8,8 @@ taskkill /F /PID 6164 2>nul
 nssm remove NodeRed confirm
 sc delete NodeRed
 
+::install nssm
+choco install nssm
 ::install node-red
 npm install -g node-red
 
