@@ -8,6 +8,9 @@ taskkill /F /PID 6164 2>nul
 nssm remove NodeRed confirm
 sc delete NodeRed
 
+::install node-red
+npm install -g node-red
+
 :: สร้างโฟลเดอร์และให้ SYSTEM สิทธิ์
 mkdir C:\node-red 2>nul
 mkdir C:\logs 2>nul
