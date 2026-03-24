@@ -24,8 +24,8 @@ nssm install NodeRed "C:\Program Files\nodejs\node.exe" "\"C:\Users\Server-Tower
 
 :: ตั้ง working dir และ log
 nssm set NodeRed AppDirectory "C:\node-red"
-nssm set NodeRed AppStdout "C:\logs\nodered-out.log"
-nssm set NodeRed AppStderr "C:\logs\nodered-err.log"
+nssm set NodeRed AppStdout "C:\logs1\nodered-out.log"
+nssm set NodeRed AppStderr "C:\logs1\nodered-err.log"
 
 :: ตั้ง auto-start แล้วสตาร์ท
 sc config NodeRed start= auto
